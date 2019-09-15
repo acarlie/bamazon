@@ -13,7 +13,7 @@ const util = {
             .then(res => { return res });
     },
     connect: function(sql, args, cb){
-        const connectObj = { host: "localhost", port: 3306, user: "root", password: "wp8177", database: "top_songsDB" };
+        const connectObj = { host: "localhost", port: 3306, user: "root", password: "wp8177", database: "bamazon_DB" };
         const connection = mysql.createConnection(connectObj);
         
         connection.connect(function(err) {
