@@ -4,16 +4,32 @@ const colors = require("colors");
 const util = require("./utilities");
 
 const cust = {
-    viewAll: function(){
+    getProducts: function(){
         let sql = "SELECT * FROM products";
-        let format = (obj) => console.log(obj);
-        util.connect(sql, [], format);
+        util.connect(sql, [], this.viewAndPurchase);
     },
-    askProduct(){
-        
+    viewAndPurchase: async function(res){
+        let tableHeader = ["ID", "Product Name", "Dept", "Price", "Quant", "Total Sales"];
+        let productTable = util.tableFromJSON(tableHeader, res);
+        console.log("\n" + productTable);
+
+        let productPrompt = new util.Prompt("number", "Enter the ID of the product to purchase:", "id");
+        let id;
+        do {
+            let answer = await util.ask({...productPrompt});
+            if (util.validateID(res, answer.id)){
+                id = answer.id;
+            } else {
+                console.log("Answer was not a valid ID." .red);
+            }
+        } while ( id === undefined );
     }
-    
 }
+
+//Take type, name, message[, default, filter, validate, transformer] properties.
+// function validateFirstName(name){
+//     return name !== '';
+// }
 
 // confirm example
 // var newPrompt = new util.Prompt("confirm", "Hello?", "hello");
@@ -28,7 +44,7 @@ const cust = {
 // * The first should ask them the ID of the product they would like to buy.
 // * The second message should ask how many units of the product they would like to buy.
 
-cust.viewAll();
+cust.getProducts();
 
 // async function top(){
 //     let res = await getArtist();

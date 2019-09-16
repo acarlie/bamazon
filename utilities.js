@@ -1,5 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+const {table} = require('table');
+const colors = require("colors");
 
 const util = {
     Prompt: function(type, message, name){
@@ -22,13 +24,52 @@ const util = {
             connection.query(sql, args, function(err, res) {
                 if (err) throw err;
                 let parsed = JSON.parse(JSON.stringify(res));
-                for (let x of parsed){
-                    cb(x);
-                }
+                cb(parsed);
                 connection.end();
             });
         
         });
+    },
+    validateID: function(res, val){
+        let arr = res.map(x => x.id);
+        return arr.indexOf(val) > -1 ? true : false ;
+    },
+    tableFromJSON: function(headerArr, json){
+        let header = headerArr.map(x => x.cyan);
+        let arr = json.map(x => {
+            let data = [];
+            for (let prop in x){
+                if (x.hasOwnProperty(prop)){
+                    data = data.concat(x[prop]);
+                } 
+            }
+            return data;
+        });
+
+        let final = [header].concat(arr);
+        return table(final, this.tableConfig);
+    },
+    tableConfig: {
+        border: {
+            topBody: `─`.grey,
+            topJoin: `┬`.grey,
+            topLeft: `┌`.grey,
+            topRight: `┐`.grey,
+        
+            bottomBody: `─`.grey,
+            bottomJoin: `┴`.grey,
+            bottomLeft: `└`.grey,
+            bottomRight: `┘`.grey,
+        
+            bodyLeft: `│`.grey,
+            bodyRight: `│`.grey,
+            bodyJoin: `│`.grey,
+        
+            joinBody: `─`.grey,
+            joinLeft: `├`.grey,
+            joinRight: `┤`.grey,
+            joinJoin: `┼`.grey
+        }
     }
 }
 
