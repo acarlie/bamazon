@@ -9,6 +9,7 @@ const util = {
         this.message = message;
         this.name = name;
     },
+    parse: (res) => JSON.parse(JSON.stringify(res)),
     ask: function(promptObj){
         return inquirer
             .prompt(promptObj)
@@ -22,11 +23,11 @@ const util = {
         return query;
     },
     query: function(connection, sql, args){
+        let me = this;
         return new Promise((resolve, reject) =>{
             connection.query(sql, args, function(err, res) {
                 if (err) throw err;
-                let parsed = JSON.parse(JSON.stringify(res));
-                resolve(parsed);
+                resolve(me.parse(res));
                 connection.end();
             });
         }).then(res => { return res });
@@ -36,8 +37,8 @@ const util = {
         return arr.indexOf(val) > -1 ? true : false ;
     },
     getStock: function(res, val){
-        let obj = res.filter(x => x.id === val);
-        return obj.stock;
+        let arr = res.filter(x => x.id === val);
+        return arr[0].stock;
     },
     tableFromJSON: function(headerArr, json){
         let header = headerArr.map(x => x.cyan);
@@ -54,6 +55,7 @@ const util = {
         let final = [header].concat(arr);
         return table(final, this.tableConfig);
     },
+    productsHeader: ["ID", "Product Name", "Dept", "Price", "Quant", "Total Sales"],
     tableConfig: {
         border: {
             topBody: `─`.grey,
@@ -77,14 +79,5 @@ const util = {
         }
     }
 }
-
-// confirm example
-// var newPrompt = new util.Prompt("confirm", "Hello?", "hello");
-// util.ask({...newPrompt}); //spread gets around issue of using new instance constructor directly
-
-// list example
-// var newPrompt2 = new util.Prompt("list", "Which do you prefer?", "list-name");
-// newPrompt2.choices = ["opt1", "opt2"];
-// util.ask({...newPrompt2});
 
 module.exports = util;
