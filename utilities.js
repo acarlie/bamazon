@@ -36,9 +36,9 @@ const util = {
         let arr = res.map(x => x.id);
         return arr.indexOf(val) > -1 ? true : false ;
     },
-    getStock: function(res, val){
+    getObjByID: function(res, val){
         let arr = res.filter(x => x.id === val);
-        return arr[0].stock;
+        return arr[0];
     },
     tableFromJSON: function(headerArr, json){
         let header = headerArr.map(x => x.cyan);
