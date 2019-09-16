@@ -14,25 +14,30 @@ const util = {
             .prompt(promptObj)
             .then(res => { return res });
     },
-    connect: function(sql, args, cb){
+    connect: async function(sql, args){
         const connectObj = { host: "localhost", port: 3306, user: "root", password: "wp8177", database: "bamazon_DB" };
         const connection = mysql.createConnection(connectObj);
-        
-        connection.connect(function(err) {
-        if (err) throw err;
-    
+
+        let query = await this.query(connection, sql, args);
+        return query;
+    },
+    query: function(connection, sql, args){
+        return new Promise((resolve, reject) =>{
             connection.query(sql, args, function(err, res) {
                 if (err) throw err;
                 let parsed = JSON.parse(JSON.stringify(res));
-                cb(parsed);
+                resolve(parsed);
                 connection.end();
             });
-        
-        });
+        }).then(res => { return res });
     },
     validateID: function(res, val){
         let arr = res.map(x => x.id);
         return arr.indexOf(val) > -1 ? true : false ;
+    },
+    getStock: function(res, val){
+        let obj = res.filter(x => x.id === val);
+        return obj.stock;
     },
     tableFromJSON: function(headerArr, json){
         let header = headerArr.map(x => x.cyan);

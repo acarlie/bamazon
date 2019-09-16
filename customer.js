@@ -8,23 +8,42 @@ const cust = {
         let sql = "SELECT * FROM products";
         util.connect(sql, [], this.viewAndPurchase);
     },
-    viewAndPurchase: async function(res){
+    test: async function(){
+        let sql = "SELECT * FROM products";
+        // let cb = (obj) => {return obj};
+        let res = await util.connect(sql, []);
+        console.log(res);
+    },
+    viewAndPurchase: async function(){
+        let sql = "SELECT * FROM products";
+        let res = await util.connect(sql, []);
+
         let tableHeader = ["ID", "Product Name", "Dept", "Price", "Quant", "Total Sales"];
         let productTable = util.tableFromJSON(tableHeader, res);
         console.log("\n" + productTable);
 
         let productPrompt = new util.Prompt("number", "Enter the ID of the product to purchase:", "id");
+        let quantPrompt = new util.Prompt("number", "How many units would you like to purchase?", "quant");
+
         let id;
+        let answer;
+
         do {
-            let answer = await util.ask({...productPrompt});
+            answer = await util.ask([{...productPrompt}, {...quantPrompt}]);
             if (util.validateID(res, answer.id)){
                 id = answer.id;
             } else {
-                console.log("Answer was not a valid ID." .red);
+                console.log("Your ID was not valid, please try again." .red);
             }
         } while ( id === undefined );
+
+        console.log(answer);
+        let stock = util.getStock(res, answer.id);
+
     }
 }
+
+
 
 //Take type, name, message[, default, filter, validate, transformer] properties.
 // function validateFirstName(name){
@@ -44,7 +63,9 @@ const cust = {
 // * The first should ask them the ID of the product they would like to buy.
 // * The second message should ask how many units of the product they would like to buy.
 
-cust.getProducts();
+cust.viewAndPurchase();
+// cust.test();
+
 
 // async function top(){
 //     let res = await getArtist();
