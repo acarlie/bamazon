@@ -42,6 +42,14 @@ const util = {
         let res = await util.connect(sql, []);
         return res;
     },
+    setItems: async function(args){
+        let sqlUpdate = "UPDATE products SET ? WHERE ?";
+        let update = await util.connect(sqlUpdate, args);
+    },
+    displayTable: function(res){
+        let productTable = this.tableFromJSON(this.productsHeader, res);
+        console.log("\n" + productTable);
+    },
     query: function(connection, sql, args){
         let me = this;
         return new Promise((resolve, reject) =>{
@@ -75,7 +83,7 @@ const util = {
         let final = [header].concat(arr);
         return table(final, this.tableConfig);
     },
-    productsHeader: ["ID", "Product Name", "Dept", "Price", "Quant", "Total Sales"],
+    productsHeader: ["ID", "Product Name", "Dept", "Price", "Stock", "Total Sales"],
     tableConfig: {
         border: {
             topBody: `─`.grey,

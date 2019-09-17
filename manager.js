@@ -1,13 +1,3 @@
-//   * List a set of menu options:
-//     * View Products for Sale
-//     * View Low Inventory
-//     * Add to Inventory
-//     * Add New Product
-//   * If a manager selects `View Products for Sale`, the app should list every available item: the item IDs, names, prices, and quantities.
-//   * If a manager selects `View Low Inventory`, then it should list all items with an inventory count lower than five.
-//   * If a manager selects `Add to Inventory`, your app should display a prompt that will let the manager "add more" of any item currently in the store.
-//   * If a manager selects `Add New Product`, it should allow the manager to add a completely new product to the store.
-
 const colors = require("colors");
 const util = require("./utilities");
 
@@ -26,7 +16,7 @@ const manager = {
                 this.addInv();
                 break;
             case "3":
-                //Add New Product
+                //   * If a manager selects `Add New Product`, it should allow the manager to add a completely new product to the store.
                 break;
         }
     },
@@ -47,47 +37,62 @@ const manager = {
         let res = await util.selectAll();
 
         //display products
-        let productTable = util.tableFromJSON(util.productsHeader, res);
-        console.log("\n" + productTable);
+        util.displayTable(res);
     },
     viewLowInv: async function(){
         let sql = "SELECT * FROM products WHERE stock < 15";
         let res = await util.connect(sql, []);
 
         //display products
-        let productTable = util.tableFromJSON(util.productsHeader, res);
-        console.log("\n" + productTable);
+        util.displayTable(res);
     },
     addInv: async function(){
+        //connect to db
         let res = await util.selectAll();
 
+        //ask for product id
         let id = await util.askID(res, "What is the ID of the product you would like to update?");
         let obj = util.getObjByID(res, id);
-        console.log(obj);
 
-        // let sqlUpdate = "UPDATE products SET ? WHERE ?"
-        // let stockUpdate;
-        // util.connect(sqlUpdate, [{stock: stockUpdate}, {id: id}]);
+        //ask for quantity to add
+        let toAdd = await this.askUpdateQuant(obj);
+
+        //confirm
+        let confirm = await this.askConfirmUpdate(obj, toAdd);
+
+        //set stock or cancel
+        if (confirm.update) {
+            let stock = obj.stock + toAdd;
+            console.log(`\n Update Confirmation: ${toAdd} unit(s) of '${obj.name}' were added to stock for a total of ${stock}. \n` .bgGreen.black);
+            util.setItems([{stock: stock}, {id: id}]);
+        } else {
+            console.log('\n Stock Update Cancelled \n'.bgRed.black);
+        }
 
     },
     askUpdateQuant: async function(obj){
-        let updateQuantPrompt = new util.Prompt("number", "How many units of ")
+        let updateQuantPrompt = new util.Prompt("number", `How many units of '${obj.name}' would you like to add to stock?`, "stock");
+
+        let quant;
+        do {
+            let ans = await util.ask({...updateQuantPrompt});
+            let isInt = Number.isInteger(ans.stock);
+
+            if (ans.stock >= 0 && isInt) {
+                quant = ans.stock;
+            } else {
+                console.log('Please enter an integer 0 or greater.' .red)
+            }
+
+        } while ( quant === undefined );
+
+        return quant;
+    },
+    askConfirmUpdate: async function(obj, quant){
+        let updatePrompt = new util.Prompt("confirm", `Please confirm stock update: ${quant} units of ${obj.name} will be stocked, for a total of ${obj.stock + quant}.`, "update");
+        let res = await util.ask({...updatePrompt});
+        return res;
     }
 }
 
 manager.selectAction();
-
-// let quantPrompt = new util.Prompt("number", `How many unit(s) would you like to purchase? (Current stock is ${stock})`, "quant");
-
-// do {
-//     let quantAnswer = await util.ask({...quantPrompt});
-//     if (stock - quantAnswer.quant > 0 && quantAnswer.quant > 0){
-//         quant = quantAnswer.quant;
-//     } else if (quantAnswer.quant <= 0) {
-//         console.log(`Please enter a quantity greater than 0`);
-//     } else {
-//         console.log(`Insufficient stock, please enter a quantity less than ${stock}` .red);
-//     }
-// } while ( quant === undefined );
-
-// return quant;

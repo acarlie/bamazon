@@ -7,8 +7,7 @@ const cust = {
         let res = await util.selectAll();
 
         //display products
-        let productTable = util.tableFromJSON(util.productsHeader, res);
-        console.log("\n" + productTable);
+        util.displayTable(res);
 
         //ask for product id
         let id = await util.askID(res, "Enter the ID of the product to purchase:");
@@ -54,10 +53,9 @@ const cust = {
         return response;
     },
     updateProduct: async function(obj, id, quant, total){
-        let sqlUpdate = "UPDATE products SET ? WHERE ?"
         let remaining = obj.stock - quant;
         let sales = obj.product_sales + total;
-        util.connect(sqlUpdate, [{stock: remaining, product_sales: sales}, {id: id}]);
+        util.setItems([{stock: remaining, product_sales: sales}, {id: id}]);
     },
 }
 
