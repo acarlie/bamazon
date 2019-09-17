@@ -1,20 +1,17 @@
-const mysql = require("mysql");
-const inquirer = require("inquirer");
 const colors = require("colors");
 const util = require("./utilities");
 
 const cust = {
     viewAndPurchase: async function(){
         //connect to db
-        let sql = "SELECT * FROM products";
-        let res = await util.connect(sql, []);
+        let res = await util.selectAll();
 
         //display products
         let productTable = util.tableFromJSON(util.productsHeader, res);
         console.log("\n" + productTable);
 
         //ask for product id
-        let id = await this.askID(res);
+        let id = await util.askID(res, "Enter the ID of the product to purchase:");
 
         //ask for quantity
         let obj = util.getObjByID(res, id);
@@ -33,31 +30,17 @@ const cust = {
         }
 
     },
-    askID: async function(res){
-        let id;
-        let productPrompt = new util.Prompt("number", "Enter the ID of the product to purchase:", "id");
-
-        do {
-            let idAnswer = await util.ask({...productPrompt});
-            if (util.validateID(res, idAnswer.id)){
-                id = idAnswer.id;
-            } else {
-                console.log("Your ID was not valid, please try again." .red);
-            }
-        } while ( id === undefined );
-
-        return id;
-    },
     askQuant: async function(res, stock){
         let quant;
         let quantPrompt = new util.Prompt("number", `How many unit(s) would you like to purchase? (Current stock is ${stock})`, "quant");
 
         do {
-            let quantAnswer = await util.ask({...quantPrompt});
-            if (stock - quantAnswer.quant > 0 && quantAnswer.quant > 0){
-                quant = quantAnswer.quant;
-            } else if (quantAnswer.quant <= 0) {
-                console.log(`Please enter a quantity greater than 0`);
+            let ans = await util.ask({...quantPrompt});
+            let isInt = Number.isInteger(ans.quant);
+            if (stock - ans.quant > 0 && ans.quant > 0 && isInt){
+                quant = ans.quant;
+            } else if (ans.quant <= 0 || !isInt) {
+                console.log(`Please enter an integer greater than 0`);
             } else {
                 console.log(`Insufficient stock, please enter a quantity less than ${stock}` .red);
             }

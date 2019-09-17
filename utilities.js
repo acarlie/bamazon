@@ -15,12 +15,32 @@ const util = {
             .prompt(promptObj)
             .then(res => { return res });
     },
+    askID: async function(res, message){
+        let id;
+        let productPrompt = new util.Prompt("number", message, "id");
+
+        do {
+            let idAnswer = await util.ask({...productPrompt});
+            if (util.validateID(res, idAnswer.id)){
+                id = idAnswer.id;
+            } else {
+                console.log("Your ID was not valid, please try again." .red);
+            }
+        } while ( id === undefined );
+
+        return id;
+    },
     connect: async function(sql, args){
         const connectObj = { host: "localhost", port: 3306, user: "root", password: "wp8177", database: "bamazon_DB" };
         const connection = mysql.createConnection(connectObj);
 
         let query = await this.query(connection, sql, args);
         return query;
+    },
+    selectAll: async function(){
+        let sql = "SELECT * FROM products";
+        let res = await util.connect(sql, []);
+        return res;
     },
     query: function(connection, sql, args){
         let me = this;
