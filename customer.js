@@ -18,10 +18,11 @@ const CUST = {
 
         //confirm order
         let total = obj.price * quant;
-        let askConfirm = await this.askConfirm(obj, quant, total);
+        let confirmMessage = `Please confirm your purchase of ${quant} unit(s) of '${obj.name}' for $${total} ($${obj.price}/ea):`;
+        let confirm = await UTIL.askConfirm(confirmMessage);
 
         //update db if order is confirmed
-        if (askConfirm.purchase){
+        if (confirm){
             console.log(`\n Order Confirmation: ${quant} unit(s) of '${obj.name}' were purchased for $${total}. \n` .bgGreen.black);
             this.updateProduct(obj, id, quant, total);
         } else {
@@ -46,11 +47,6 @@ const CUST = {
         } while ( quant === undefined );
 
         return quant;
-    },
-    askConfirm: async function(obj, quant, total){
-        let confirmPrompt = new UTIL.Prompt("confirm", `Please confirm your purchase of ${quant} unit(s) of '${obj.name}' for $${total} ($${obj.price}/ea):`, "purchase");
-        let response = await UTIL.ask({...confirmPrompt});
-        return response;
     },
     updateProduct: async function(obj, id, quant, total){
         let remaining = obj.stock - quant;

@@ -15,6 +15,30 @@ const util = {
             .prompt(promptObj)
             .then(res => { return res });
     },
+    askConfirm: async function(message){
+        let confirmPrompt = new this.Prompt("confirm", message, "confirm");
+        let res = await this.ask({...confirmPrompt});
+        return res.confirm;
+    },
+    askNumberUntilCondition: async function(message, condition, err){
+        let numPrompt = new UTIL.Prompt("number", message, "num");
+        let number;
+
+        do {
+            let ans = await UTIL.ask({...numPrompt});
+            let bool = condition(ans.num);
+
+            if (bool){
+                number = ans.num;
+            } else {
+                console.log(err .red);
+            } 
+
+        } while ( number === undefined );
+
+        return number;
+
+    },
     askID: async function(res, message){
         let id;
         let productPrompt = new util.Prompt("number", message, "id");

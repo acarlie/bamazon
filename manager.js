@@ -57,10 +57,11 @@ const MANAGER = {
         let toAdd = await this.askUpdateQuant(obj);
 
         //confirm
-        let confirm = await this.askConfirmUpdate(obj, toAdd);
+        let confirmMessage = `Please confirm stock update: ${toAdd} units of ${obj.name} will be stocked, for a total of ${obj.stock + toAdd}.`;
+        let confirm = await UTIL.askConfirm(confirmMessage);
 
         //set stock or cancel
-        if (confirm.update) {
+        if (confirm) {
             let stock = obj.stock + toAdd;
             console.log(`\n Update Confirmation: ${toAdd} unit(s) of '${obj.name}' were added to stock for a total of ${stock}. \n` .bgGreen.black);
             UTIL.setItems([{stock: stock}, {id: id}]);
@@ -88,11 +89,6 @@ const MANAGER = {
 
         return quant;
     },
-    askConfirmUpdate: async function(obj, quant){
-        let updatePrompt = new UTIL.Prompt("confirm", `Please confirm stock update: ${quant} units of ${obj.name} will be stocked, for a total of ${obj.stock + quant}.`, "update");
-        let res = await UTIL.ask({...updatePrompt});
-        return res;
-    },
     createProduct: async function(){
         // check current products and depts
         let res = await UTIL.selectAll();
@@ -104,11 +100,20 @@ const MANAGER = {
         let price = await this.askPrice();
 
         // confirm
-        let confirm;
-        console.log(name, stock, dept, price);
-        
-        // INSERT INTO products (name, department, price, stock)
-        // VALUES ("Boba Tea Mix", "Grocery", 5.50, 20);
+        let confirmMessage = `Please confirm product: '${name}' will be added to the ${dept} dept with an initial stock of ${stock} and price of ${price}.`;
+        let confirm = await UTIL.askConfirm(confirmMessage);
+
+        //if confirm update products table
+        if (confirm){
+            console.log(name, stock, dept, price);
+            let sql = 'INSERT INTO products (name, department, price, stock)';
+                sql += ' VALUES (?, ?, ?, ?);';
+            let args = [name, dept, price, stock];
+            let update = await UTIL.connect(sql, args);
+        } else {
+            console.log(`Product creation cancelled` .red);
+        }
+ 
     },
     askName: async function(res){
         let namePrompt = new UTIL.Prompt("input", "What is the product's name?", "name");
@@ -170,14 +175,11 @@ const MANAGER = {
             if (ans.price > 0){
                 price = ans.price.toFixed(2);
             } else {
-                console.log("Please enter a positive number above 0.")
+                console.log("Please enter a positive number above 0." .red);
             }
         } while ( price === undefined );
 
         return price;
-    },
-    askProductCreate: async function(){
-
     }
 }
 
