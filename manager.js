@@ -1,7 +1,7 @@
-const colors = require("colors");
-const util = require("./utilities");
+const COLORS = require("colors");
+const UTIL = require("./utilities");
 
-const manager = {
+const MANAGER = {
     selectAction: async function(){
         let action = await this.askAction();
 
@@ -16,13 +16,12 @@ const manager = {
                 this.addInv();
                 break;
             case "3":
-                //   * If a manager selects `Add New Product`, it should allow the manager to add a completely new product to the store.
+                this.createProduct();
                 break;
         }
     },
     askAction: async function(){
-
-        let actionPrompt = new util.Prompt("list", "What would you like to do?", "action");
+        let actionPrompt = new UTIL.Prompt("list", "What would you like to do?", "action");
         actionPrompt.choices = [
             { name: "View Products for Sale", value: "0" },
             { name: "View Low Inventory", value: "1" },
@@ -30,29 +29,29 @@ const manager = {
             { name: "Add New Product", value: "3" }
         ];
 
-        let res = await util.ask({...actionPrompt});
+        let res = await UTIL.ask({...actionPrompt});
         return res;
     },
     viewProducts: async function(){
-        let res = await util.selectAll();
+        let res = await UTIL.selectAll();
 
         //display products
-        util.displayTable(res);
+        UTIL.displayTable(res);
     },
     viewLowInv: async function(){
         let sql = "SELECT * FROM products WHERE stock < 15";
-        let res = await util.connect(sql, []);
+        let res = await UTIL.connect(sql, []);
 
         //display products
-        util.displayTable(res);
+        UTIL.displayTable(res);
     },
     addInv: async function(){
         //connect to db
-        let res = await util.selectAll();
+        let res = await UTIL.selectAll();
 
         //ask for product id
-        let id = await util.askID(res, "What is the ID of the product you would like to update?");
-        let obj = util.getObjByID(res, id);
+        let id = await UTIL.askID(res, "What is the ID of the product you would like to update?");
+        let obj = UTIL.getObjByID(res, id);
 
         //ask for quantity to add
         let toAdd = await this.askUpdateQuant(obj);
@@ -64,18 +63,19 @@ const manager = {
         if (confirm.update) {
             let stock = obj.stock + toAdd;
             console.log(`\n Update Confirmation: ${toAdd} unit(s) of '${obj.name}' were added to stock for a total of ${stock}. \n` .bgGreen.black);
-            util.setItems([{stock: stock}, {id: id}]);
+            UTIL.setItems([{stock: stock}, {id: id}]);
         } else {
             console.log('\n Stock Update Cancelled \n'.bgRed.black);
         }
 
     },
     askUpdateQuant: async function(obj){
-        let updateQuantPrompt = new util.Prompt("number", `How many units of '${obj.name}' would you like to add to stock?`, "stock");
+        let updateQuantPrompt = new UTIL.Prompt("number", `How many units of '${obj.name}' would you like to add to stock?`, "stock");
 
         let quant;
         do {
-            let ans = await util.ask({...updateQuantPrompt});
+
+            let ans = await UTIL.ask({...updateQuantPrompt});
             let isInt = Number.isInteger(ans.stock);
 
             if (ans.stock >= 0 && isInt) {
@@ -89,10 +89,96 @@ const manager = {
         return quant;
     },
     askConfirmUpdate: async function(obj, quant){
-        let updatePrompt = new util.Prompt("confirm", `Please confirm stock update: ${quant} units of ${obj.name} will be stocked, for a total of ${obj.stock + quant}.`, "update");
-        let res = await util.ask({...updatePrompt});
+        let updatePrompt = new UTIL.Prompt("confirm", `Please confirm stock update: ${quant} units of ${obj.name} will be stocked, for a total of ${obj.stock + quant}.`, "update");
+        let res = await UTIL.ask({...updatePrompt});
         return res;
+    },
+    createProduct: async function(){
+        // check current products and depts
+        let res = await UTIL.selectAll();
+
+        // ask for product details
+        let name = await this.askName(res);
+        let dept = await this.askDept(res);
+        let stock = await this.askStock();
+        let price = await this.askPrice();
+
+        // confirm
+        let confirm;
+        console.log(name, stock, dept, price);
+        
+        // INSERT INTO products (name, department, price, stock)
+        // VALUES ("Boba Tea Mix", "Grocery", 5.50, 20);
+    },
+    askName: async function(res){
+        let namePrompt = new UTIL.Prompt("input", "What is the product's name?", "name");
+        let allNames = res.map(x => x.name);
+        let name;
+
+        do {
+            let response = await UTIL.ask({...namePrompt});
+            let regex = /([^A-Z\s])/gi;
+            let regexTest = regex.test(response.name);
+            let isSame = allNames.indexOf(response.name) > -1;
+
+            if ( !regexTest && !isSame ){
+                name = response;
+            } else if ( isSame ){
+                console.log(`The product '${response.name}' already exists. Please enter a different product.` .red);
+            } else if ( regexTest ){
+                console.log('Please only use letters and spaces.' .red);
+            }
+
+        } while ( name === undefined );
+
+        return name.name;
+    },
+    askDept: async function(res){
+        let allDepts = res.map(x => x.department);
+        let deptPrompt = new UTIL.Prompt("list", "What department is this product in?", "dept");
+            deptPrompt.choices = [...new Set(allDepts)];
+
+        let ans = await UTIL.ask({...deptPrompt});
+
+        return ans.dept;
+    },
+    askStock: async function(){
+        let stockPrompt = new UTIL.Prompt("number", "What is the product's initial stock?", "stock");
+        let stock;
+
+        do {
+            let ans = await UTIL.ask({...stockPrompt});
+            let isInt = Number.isInteger(ans.stock);
+
+            if (ans.stock >= 0 && isInt){
+                stock = ans.stock;
+            } else {
+                console.log(`Please enter an integer greater than or equal to 0` .red);
+            } 
+
+        } while ( stock === undefined );
+
+        return stock;
+
+    },
+    askPrice: async function(){
+        let pricePrompt = new UTIL.Prompt("number", "What is the product's price?", "price");
+        let price;
+
+        do {
+            let ans = await UTIL.ask({...pricePrompt});
+            if (ans.price > 0){
+                price = ans.price.toFixed(2);
+            } else {
+                console.log("Please enter a positive number above 0.")
+            }
+        } while ( price === undefined );
+
+        return price;
+    },
+    askProductCreate: async function(){
+
     }
 }
 
-manager.selectAction();
+MANAGER.selectAction();

@@ -1,19 +1,19 @@
-const colors = require("colors");
-const util = require("./utilities");
+const COLORS = require("colors");
+const UTIL = require("./utilities");
 
-const cust = {
+const CUST = {
     viewAndPurchase: async function(){
         //connect to db
-        let res = await util.selectAll();
+        let res = await UTIL.selectAll();
 
         //display products
-        util.displayTable(res);
+        UTIL.displayTable(res);
 
         //ask for product id
-        let id = await util.askID(res, "Enter the ID of the product to purchase:");
+        let id = await UTIL.askID(res, "Enter the ID of the product to purchase:");
 
         //ask for quantity
-        let obj = util.getObjByID(res, id);
+        let obj = UTIL.getObjByID(res, id);
         let quant = await this.askQuant(res, obj.stock);
 
         //confirm order
@@ -31,10 +31,10 @@ const cust = {
     },
     askQuant: async function(res, stock){
         let quant;
-        let quantPrompt = new util.Prompt("number", `How many unit(s) would you like to purchase? (Current stock is ${stock})`, "quant");
+        let quantPrompt = new UTIL.Prompt("number", `How many unit(s) would you like to purchase? (Current stock is ${stock})`, "quant");
 
         do {
-            let ans = await util.ask({...quantPrompt});
+            let ans = await UTIL.ask({...quantPrompt});
             let isInt = Number.isInteger(ans.quant);
             if (stock - ans.quant > 0 && ans.quant > 0 && isInt){
                 quant = ans.quant;
@@ -48,15 +48,15 @@ const cust = {
         return quant;
     },
     askConfirm: async function(obj, quant, total){
-        let confirmPrompt = new util.Prompt("confirm", `Please confirm your purchase of ${quant} unit(s) of '${obj.name}' for $${total} ($${obj.price}/ea):`, "purchase");
-        let response = await util.ask({...confirmPrompt});
+        let confirmPrompt = new UTIL.Prompt("confirm", `Please confirm your purchase of ${quant} unit(s) of '${obj.name}' for $${total} ($${obj.price}/ea):`, "purchase");
+        let response = await UTIL.ask({...confirmPrompt});
         return response;
     },
     updateProduct: async function(obj, id, quant, total){
         let remaining = obj.stock - quant;
         let sales = obj.product_sales + total;
-        util.setItems([{stock: remaining, product_sales: sales}, {id: id}]);
+        UTIL.setItems([{stock: remaining, product_sales: sales}, {id: id}]);
     },
 }
 
-cust.viewAndPurchase();
+CUST.viewAndPurchase();

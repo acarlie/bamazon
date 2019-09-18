@@ -1,7 +1,7 @@
-const mysql = require("mysql");
-const inquirer = require("inquirer");
+const MYSQL = require("mysql");
+const INQUIRER = require("inquirer");
 const {table} = require('table');
-const colors = require("colors");
+const COLORS = require("colors");
 
 const util = {
     Prompt: function(type, message, name){
@@ -11,7 +11,7 @@ const util = {
     },
     parse: (res) => JSON.parse(JSON.stringify(res)),
     ask: function(promptObj){
-        return inquirer
+        return INQUIRER
             .prompt(promptObj)
             .then(res => { return res });
     },
@@ -32,7 +32,7 @@ const util = {
     },
     connect: async function(sql, args){
         const connectObj = { host: "localhost", port: 3306, user: "root", password: "wp8177", database: "bamazon_DB" };
-        const connection = mysql.createConnection(connectObj);
+        const connection = MYSQL.createConnection(connectObj);
 
         let query = await this.query(connection, sql, args);
         return query;
