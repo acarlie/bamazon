@@ -1,25 +1,28 @@
 const COLORS = require("colors");
 const UTIL = require("./utilities");
+const DB = UTIL.database;
+const QUESTIONS = UTIL.questions;
+const UTILITIES = UTIL.util;
 
 const CUST = {
     viewAndPurchase: async function(){
         //connect to db
-        let res = await UTIL.selectAll();
+        let res = await DB.selectAll();
 
         //display products
-        UTIL.displayTable(res);
+        UTILITIES.displayTable(res);
 
         //ask for product id
-        let id = await UTIL.askID(res, "Enter the ID of the product to purchase:");
+        let id = await QUESTIONS.askID(res, "Enter the ID of the product to purchase:");
 
         //ask for quantity
-        let obj = UTIL.getObjByID(res, id);
+        let obj = UTILITIES.getObjByID(res, id);
         let quant = await this.askQuant(res, obj.stock);
 
         //confirm order
         let total = obj.price * quant;
         let confirmMessage = `Please confirm your purchase of ${quant} unit(s) of '${obj.name}' for $${total} ($${obj.price}/ea):`;
-        let confirm = await UTIL.askConfirm(confirmMessage);
+        let confirm = await QUESTIONS.askConfirm(confirmMessage);
 
         //update db if order is confirmed
         if (confirm){
@@ -32,10 +35,10 @@ const CUST = {
     },
     askQuant: async function(res, stock){
         let quant;
-        let quantPrompt = new UTIL.Prompt("number", `How many unit(s) would you like to purchase? (Current stock is ${stock})`, "quant");
+        let quantPrompt = new QUESTIONS.Prompt("number", `How many unit(s) would you like to purchase? (Current stock is ${stock})`, "quant");
 
         do {
-            let ans = await UTIL.ask({...quantPrompt});
+            let ans = await QUESTIONS.ask({...quantPrompt});
             let isInt = Number.isInteger(ans.quant);
             if (stock - ans.quant > 0 && ans.quant > 0 && isInt){
                 quant = ans.quant;
@@ -51,7 +54,7 @@ const CUST = {
     updateProduct: async function(obj, id, quant, total){
         let remaining = obj.stock - quant;
         let sales = obj.product_sales + total;
-        UTIL.setItems([{stock: remaining, product_sales: sales}, {id: id}]);
+        DB.setItems([{stock: remaining, product_sales: sales}, {id: id}]);
     },
 }
 

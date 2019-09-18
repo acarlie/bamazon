@@ -1,5 +1,8 @@
 const COLORS = require("colors");
 const UTIL = require("./utilities");
+const DB = UTIL.database;
+const QUESTIONS = UTIL.questions;
+const UTILITIES = UTIL.util;
 
 const MANAGER = {
     selectAction: async function(){
@@ -9,7 +12,7 @@ const MANAGER = {
             { name: "Add to Inventory", value: "2" },
             { name: "Add New Product", value: "3" }
         ];
-        let action = await UTIL.askList(choices);
+        let action = await QUESTIONS.askList(choices);
 
         switch(action){
             case "0":
@@ -27,39 +30,39 @@ const MANAGER = {
         }
     },
     viewProducts: async function(){
-        let res = await UTIL.selectAll();
+        let res = await DB.selectAll();
 
         //display products
-        UTIL.displayTable(res);
+        UTILITIES.displayTable(res);
     },
     viewLowInv: async function(){
         let sql = "SELECT * FROM products WHERE stock < 15";
-        let res = await UTIL.connect(sql, []);
+        let res = await DB.connect(sql, []);
 
         //display products
-        UTIL.displayTable(res);
+        UTILITIES.displayTable(res);
     },
     addInv: async function(){
         //connect to db
-        let res = await UTIL.selectAll();
+        let res = await DB.selectAll();
 
         //ask for product id
-        let id = await UTIL.askID(res, "What is the ID of the product you would like to update?");
-        let obj = UTIL.getObjByID(res, id);
+        let id = await QUESTIONS.askID(res, "What is the ID of the product you would like to update?");
+        let obj = UTILITIES.getObjByID(res, id);
 
         //ask for quantity to add
         let message = `How many units of '${obj.name}' would you like to add to stock?`;
-        let toAdd = await UTIL.askInt(message);
+        let toAdd = await QUESTIONS.askInt(message);
 
         //confirm
         let confirmMessage = `Please confirm stock update: ${toAdd} units of ${obj.name} will be stocked, for a total of ${obj.stock + toAdd}.`;
-        let confirm = await UTIL.askConfirm(confirmMessage);
+        let confirm = await QUESTIONS.askConfirm(confirmMessage);
 
         //set stock or cancel
         if (confirm) {
             let stock = obj.stock + toAdd;
             console.log(`\n Update Confirmation: ${toAdd} unit(s) of '${obj.name}' were added to stock for a total of ${stock}. \n` .bgGreen.black);
-            UTIL.setItems([{stock: stock}, {id: id}]);
+            DB.setItems([{stock: stock}, {id: id}]);
         } else {
             console.log('\n Stock Update Cancelled \n'.bgRed.black);
         }
@@ -67,25 +70,25 @@ const MANAGER = {
     },
     createProduct: async function(){
         // check current products and depts
-        let res = await UTIL.selectAll();
+        let res = await DB.selectAll();
 
         // ask for product details
         let name = await this.askName(res);
         let dept = await this.askDept(res);
         let message = "What is the product's initial stock?";
-        let stock = await UTIL.askInt(message);
+        let stock = await QUESTIONS.askInt(message);
         let price = await this.askPrice();
 
         // confirm
         let confirmMessage = `Please confirm product: '${name}' will be added to the ${dept} dept with an initial stock of ${stock} and price of ${price}.`;
-        let confirm = await UTIL.askConfirm(confirmMessage);
+        let confirm = await QUESTIONS.askConfirm(confirmMessage);
 
         //if confirm update products table
         if (confirm){
             let sql = 'INSERT INTO products (name, department, price, stock)';
                 sql += ' VALUES (?, ?, ?, ?);';
             let args = [name, dept, price, stock];
-            let update = await UTIL.connect(sql, args);
+            let update = await DB.connect(sql, args);
             console.log(`\n Product Created! '${name}' was added to the ${dept} department. \n` .bgGreen.black);
         } else {
             console.log(`Product creation cancelled` .red);
@@ -93,13 +96,13 @@ const MANAGER = {
  
     },
     askName: async function(res){
-        let namePrompt = new UTIL.Prompt("input", "What is the product's name?", "name");
+        let namePrompt = new QUESTIONS.Prompt("input", "What is the product's name?", "name");
         let allNames = res.map(x => x.name);
         let name;
 
         do {
-            let response = await UTIL.ask({...namePrompt});
-            let regex = /([^\w\s:,])/gi;
+            let response = await QUESTIONS.ask({...namePrompt});
+            let regex = /([^\w\s:,'])/gi;
             let regexTest = regex.test(response.name);
             let isSame = allNames.indexOf(response.name) > -1;
 
@@ -117,10 +120,10 @@ const MANAGER = {
     },
     askDept: async function(res){
         let allDepts = res.map(x => x.department);
-        let deptPrompt = new UTIL.Prompt("list", "What department is this product in?", "dept");
+        let deptPrompt = new QUESTIONS.Prompt("list", "What department is this product in?", "dept");
             deptPrompt.choices = [...new Set(allDepts)];
 
-        let ans = await UTIL.ask({...deptPrompt});
+        let ans = await QUESTIONS.ask({...deptPrompt});
 
         return ans.dept;
     },
@@ -129,7 +132,7 @@ const MANAGER = {
         let bool = (ans) => ans > 0;
         let err = 'Please enter a positive number greater than 0.';
 
-        let price = await this.askNumberUntilCondition(message, bool, err);
+        let price = await QUESTIONS.askNumberUntilCondition(message, bool, err);
 
         return price;
     }

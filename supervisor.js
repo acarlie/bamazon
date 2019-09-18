@@ -1,5 +1,8 @@
 const COLORS = require("colors");
 const UTIL = require("./utilities");
+const DB = UTIL.database;
+const QUESTIONS = UTIL.questions;
+const UTILITIES = UTIL.util;
 
 const SUPER = {
     selectAction: async function(){
@@ -7,7 +10,7 @@ const SUPER = {
             { name: "View Products Sales by Department", value: "0" },
             { name: "Create Department", value: "1" },
         ];
-        let action = await UTIL.askList(choices);
+        let action = await QUESTIONS.askList(choices);
 
         switch(action){
             case "0":

@@ -3,13 +3,12 @@ const INQUIRER = require("inquirer");
 const {table} = require('table');
 const COLORS = require("colors");
 
-const util = {
+const QUESTIONS = {
     Prompt: function(type, message, name){
         this.type = type;
         this.message = message;
         this.name = name;
     },
-    parse: (res) => JSON.parse(JSON.stringify(res)),
     ask: function(promptObj){
         return INQUIRER
             .prompt(promptObj)
@@ -54,11 +53,11 @@ const util = {
     },
     askID: async function(res, message){
         let id;
-        let productPrompt = new util.Prompt("number", message, "id");
+        let productPrompt = new this.Prompt("number", message, "id");
 
         do {
-            let idAnswer = await util.ask({...productPrompt});
-            if (this.validateID(res, idAnswer.id)){
+            let idAnswer = await this.ask({...productPrompt});
+            if (UTIL.validateID(res, idAnswer.id)){
                 id = idAnswer.id;
             } else {
                 console.log("Your ID was not valid, please try again." .red);
@@ -66,7 +65,11 @@ const util = {
         } while ( id === undefined );
 
         return id;
-    },
+    }
+
+};
+
+const DATABASE = {
     connect: async function(sql, args){
         const connectObj = { host: "localhost", port: 3306, user: "root", password: "wp8177", database: "bamazon_DB" };
         const connection = MYSQL.createConnection(connectObj);
@@ -76,26 +79,29 @@ const util = {
     },
     selectAll: async function(){
         let sql = "SELECT * FROM products";
-        let res = await util.connect(sql, []);
+        let res = await this.connect(sql, []);
         return res;
     },
     setItems: async function(args){
         let sqlUpdate = "UPDATE products SET ? WHERE ?";
-        let update = await util.connect(sqlUpdate, args);
-    },
-    displayTable: function(res){
-        let productTable = this.tableFromJSON(this.productsHeader, res);
-        console.log("\n" + productTable);
+        let update = await this.connect(sqlUpdate, args);
     },
     query: function(connection, sql, args){
-        let me = this;
         return new Promise((resolve, reject) =>{
             connection.query(sql, args, function(err, res) {
                 if (err) throw err;
-                resolve(me.parse(res));
+                resolve(UTIL.parse(res));
                 connection.end();
             });
         }).then(res => { return res });
+    }
+}
+
+const UTIL = {
+    parse: (res) => JSON.parse(JSON.stringify(res)),
+    displayTable: function(res){
+        let productTable = this.tableFromJSON(this.productsHeader, res);
+        console.log("\n" + productTable);
     },
     validateID: function(res, val){
         let arr = res.map(x => x.id);
@@ -145,4 +151,8 @@ const util = {
     }
 }
 
-module.exports = util;
+module.exports = {
+    util: UTIL,
+    questions: QUESTIONS,
+    database: DATABASE
+};
