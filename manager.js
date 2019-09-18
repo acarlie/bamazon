@@ -3,9 +3,15 @@ const UTIL = require("./utilities");
 
 const MANAGER = {
     selectAction: async function(){
-        let action = await this.askAction();
+        let choices = [
+            { name: "View Products for Sale", value: "0" },
+            { name: "View Low Inventory", value: "1" },
+            { name: "Add to Inventory", value: "2" },
+            { name: "Add New Product", value: "3" }
+        ];
+        let action = await UTIL.askList(choices);
 
-        switch(action.action){
+        switch(action){
             case "0":
                 this.viewProducts();
                 break;
@@ -19,18 +25,6 @@ const MANAGER = {
                 this.createProduct();
                 break;
         }
-    },
-    askAction: async function(){
-        let actionPrompt = new UTIL.Prompt("list", "What would you like to do?", "action");
-        actionPrompt.choices = [
-            { name: "View Products for Sale", value: "0" },
-            { name: "View Low Inventory", value: "1" },
-            { name: "Add to Inventory", value: "2" },
-            { name: "Add New Product", value: "3" }
-        ];
-
-        let res = await UTIL.ask({...actionPrompt});
-        return res;
     },
     viewProducts: async function(){
         let res = await UTIL.selectAll();
@@ -54,7 +48,8 @@ const MANAGER = {
         let obj = UTIL.getObjByID(res, id);
 
         //ask for quantity to add
-        let toAdd = await this.askUpdateQuant(obj);
+        let message = `How many units of '${obj.name}' would you like to add to stock?`;
+        let toAdd = await UTIL.askInt(message);
 
         //confirm
         let confirmMessage = `Please confirm stock update: ${toAdd} units of ${obj.name} will be stocked, for a total of ${obj.stock + toAdd}.`;
@@ -70,25 +65,6 @@ const MANAGER = {
         }
 
     },
-    askUpdateQuant: async function(obj){
-        let updateQuantPrompt = new UTIL.Prompt("number", `How many units of '${obj.name}' would you like to add to stock?`, "stock");
-
-        let quant;
-        do {
-
-            let ans = await UTIL.ask({...updateQuantPrompt});
-            let isInt = Number.isInteger(ans.stock);
-
-            if (ans.stock >= 0 && isInt) {
-                quant = ans.stock;
-            } else {
-                console.log('Please enter an integer 0 or greater.' .red)
-            }
-
-        } while ( quant === undefined );
-
-        return quant;
-    },
     createProduct: async function(){
         // check current products and depts
         let res = await UTIL.selectAll();
@@ -96,7 +72,8 @@ const MANAGER = {
         // ask for product details
         let name = await this.askName(res);
         let dept = await this.askDept(res);
-        let stock = await this.askStock();
+        let message = "What is the product's initial stock?";
+        let stock = await UTIL.askInt(message);
         let price = await this.askPrice();
 
         // confirm
@@ -105,11 +82,11 @@ const MANAGER = {
 
         //if confirm update products table
         if (confirm){
-            console.log(name, stock, dept, price);
             let sql = 'INSERT INTO products (name, department, price, stock)';
                 sql += ' VALUES (?, ?, ?, ?);';
             let args = [name, dept, price, stock];
             let update = await UTIL.connect(sql, args);
+            console.log(`\n Product Created! '${name}' was added to the ${dept} department. \n` .bgGreen.black);
         } else {
             console.log(`Product creation cancelled` .red);
         }
@@ -122,7 +99,7 @@ const MANAGER = {
 
         do {
             let response = await UTIL.ask({...namePrompt});
-            let regex = /([^A-Z\s])/gi;
+            let regex = /([^\w\s:,])/gi;
             let regexTest = regex.test(response.name);
             let isSame = allNames.indexOf(response.name) > -1;
 
@@ -131,7 +108,7 @@ const MANAGER = {
             } else if ( isSame ){
                 console.log(`The product '${response.name}' already exists. Please enter a different product.` .red);
             } else if ( regexTest ){
-                console.log('Please only use letters and spaces.' .red);
+                console.log('Please only use letters, numbers, and spaces.' .red);
             }
 
         } while ( name === undefined );
@@ -147,37 +124,12 @@ const MANAGER = {
 
         return ans.dept;
     },
-    askStock: async function(){
-        let stockPrompt = new UTIL.Prompt("number", "What is the product's initial stock?", "stock");
-        let stock;
-
-        do {
-            let ans = await UTIL.ask({...stockPrompt});
-            let isInt = Number.isInteger(ans.stock);
-
-            if (ans.stock >= 0 && isInt){
-                stock = ans.stock;
-            } else {
-                console.log(`Please enter an integer greater than or equal to 0` .red);
-            } 
-
-        } while ( stock === undefined );
-
-        return stock;
-
-    },
     askPrice: async function(){
-        let pricePrompt = new UTIL.Prompt("number", "What is the product's price?", "price");
-        let price;
+        let message = "What is the product's price?";
+        let bool = (ans) => ans > 0;
+        let err = 'Please enter a positive number greater than 0.';
 
-        do {
-            let ans = await UTIL.ask({...pricePrompt});
-            if (ans.price > 0){
-                price = ans.price.toFixed(2);
-            } else {
-                console.log("Please enter a positive number above 0." .red);
-            }
-        } while ( price === undefined );
+        let price = await this.askNumberUntilCondition(message, bool, err);
 
         return price;
     }

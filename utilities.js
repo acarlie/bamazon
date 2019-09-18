@@ -21,11 +21,11 @@ const util = {
         return res.confirm;
     },
     askNumberUntilCondition: async function(message, condition, err){
-        let numPrompt = new UTIL.Prompt("number", message, "num");
+        let numPrompt = new this.Prompt("number", message, "num");
         let number;
 
         do {
-            let ans = await UTIL.ask({...numPrompt});
+            let ans = await this.ask({...numPrompt});
             let bool = condition(ans.num);
 
             if (bool){
@@ -37,7 +37,20 @@ const util = {
         } while ( number === undefined );
 
         return number;
+    },
+    askInt: async function(message){
+        let bool = (ans) => ans >= 0 && Number.isInteger(ans);
+        let err = 'Please enter an integer 0 or greater.';
 
+        let quant = await this.askNumberUntilCondition(message, bool, err);
+
+        return quant;
+    },
+    askList: async function(arr){
+        let actionPrompt = new this.Prompt("list", "What would you like to do?", "action");
+        actionPrompt.choices = [...arr];
+        let res = await this.ask({...actionPrompt});
+        return res.action;
     },
     askID: async function(res, message){
         let id;
@@ -45,7 +58,7 @@ const util = {
 
         do {
             let idAnswer = await util.ask({...productPrompt});
-            if (util.validateID(res, idAnswer.id)){
+            if (this.validateID(res, idAnswer.id)){
                 id = idAnswer.id;
             } else {
                 console.log("Your ID was not valid, please try again." .red);
