@@ -45,6 +45,14 @@ const QUESTIONS = {
 
         return quant;
     },
+    askPrice: async function(message){
+        let bool = (ans) => ans > 0;
+        let err = 'Please enter a positive number greater than 0.';
+
+        let price = await this.askNumberUntilCondition(message, bool, err);
+
+        return price.toFixed(2);
+    },
     askList: async function(arr){
         let actionPrompt = new this.Prompt("list", "What would you like to do?", "action");
         actionPrompt.choices = [...arr];
@@ -65,11 +73,38 @@ const QUESTIONS = {
         } while ( id === undefined );
 
         return id;
+    },
+    askName: async function(res, message, regex, regexErr, prop){
+        let namePrompt = new QUESTIONS.Prompt("input", message, "name");
+        let allNames = res.map(x => x[prop]);
+        let name;
+
+        do {
+            let ans = await QUESTIONS.ask({...namePrompt});
+            let regexTest = regex.test(ans.name);
+            let isSame = allNames.indexOf(ans.name) > -1;
+            let resLength = ans.name.length;
+
+            if ( !regexTest && !isSame && resLength <= 70 ){
+                name = ans;
+            } else {
+                let error = "";
+
+                if ( isSame ){ error += `The product '${ans.name}' already exists. Please enter a different name. `; } 
+                if ( regexTest ){ error += regexErr; } 
+                if ( resLength > 70 ){ error += 'Names can only be 70 characters long, please enter a shorter name. '; }
+
+                console.log(error .red);
+            }
+
+        } while ( name === undefined );
+
+        return name.name;
     }
 
 };
 
-const DATABASE = {
+const DB = {
     connect: async function(sql, args){
         const connectObj = { host: "localhost", port: 3306, user: "root", password: "wp8177", database: "bamazon_DB" };
         const connection = MYSQL.createConnection(connectObj);
@@ -79,6 +114,11 @@ const DATABASE = {
     },
     selectAll: async function(){
         let sql = "SELECT * FROM products";
+        let res = await this.connect(sql, []);
+        return res;
+    },
+    selectAllDepts: async function(){
+        let sql = "SELECT * FROM departments";
         let res = await this.connect(sql, []);
         return res;
     },
@@ -154,5 +194,5 @@ const UTIL = {
 module.exports = {
     util: UTIL,
     questions: QUESTIONS,
-    database: DATABASE
+    database: DB
 };

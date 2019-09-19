@@ -1,8 +1,8 @@
 const COLORS = require("colors");
-const UTIL = require("./utilities");
-const DB = UTIL.database;
-const QUESTIONS = UTIL.questions;
-const UTILITIES = UTIL.util;
+const UTILITIES = require("./utilities");
+const DB = UTILITIES.database;
+const QUESTIONS = UTILITIES.questions;
+const UTIL = UTILITIES.util;
 
 const CUST = {
     viewAndPurchase: async function(){
@@ -10,13 +10,13 @@ const CUST = {
         let res = await DB.selectAll();
 
         //display products
-        UTILITIES.displayTable(res);
+        UTIL.displayTable(res);
 
         //ask for product id
         let id = await QUESTIONS.askID(res, "Enter the ID of the product to purchase:");
 
         //ask for quantity
-        let obj = UTILITIES.getObjByID(res, id);
+        let obj = UTIL.getObjByID(res, id);
         let quant = await this.askQuant(res, obj.stock);
 
         //confirm order
@@ -31,7 +31,6 @@ const CUST = {
         } else {
             console.log('\n Order Cancelled \n'.bgRed.black)
         }
-
     },
     askQuant: async function(res, stock){
         let quant;

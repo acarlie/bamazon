@@ -1,8 +1,8 @@
 const COLORS = require("colors");
-const UTIL = require("./utilities");
-const DB = UTIL.database;
-const QUESTIONS = UTIL.questions;
-const UTILITIES = UTIL.util;
+const UTILITIES = require("./utilities");
+const DB = UTILITIES.database;
+const QUESTIONS = UTILITIES.questions;
+const UTIL = UTILITIES.util;
 
 const MANAGER = {
     selectAction: async function(){
@@ -33,14 +33,14 @@ const MANAGER = {
         let res = await DB.selectAll();
 
         //display products
-        UTILITIES.displayTable(res);
+        UTIL.displayTable(res);
     },
     viewLowInv: async function(){
         let sql = "SELECT * FROM products WHERE stock < 15";
         let res = await DB.connect(sql, []);
 
         //display products
-        UTILITIES.displayTable(res);
+        UTIL.displayTable(res);
     },
     addInv: async function(){
         //connect to db
@@ -48,7 +48,7 @@ const MANAGER = {
 
         //ask for product id
         let id = await QUESTIONS.askID(res, "What is the ID of the product you would like to update?");
-        let obj = UTILITIES.getObjByID(res, id);
+        let obj = UTIL.getObjByID(res, id);
 
         //ask for quantity to add
         let message = `How many units of '${obj.name}' would you like to add to stock?`;
@@ -73,11 +73,11 @@ const MANAGER = {
         let res = await DB.selectAll();
 
         // ask for product details
-        let name = await this.askName(res);
-        let dept = await this.askDept(res);
+        let name = await QUESTIONS.askName(res, "What is the product's name?", /([^\w\s:,'])/gi, 'Please only use letters, numbers, spaces, and these characters: \',: ', "name");
+        let dept = await this.askDept();
         let message = "What is the product's initial stock?";
         let stock = await QUESTIONS.askInt(message);
-        let price = await this.askPrice();
+        let price = await QUESTIONS.askPrice("What is the product's price?");
 
         // confirm
         let confirmMessage = `Please confirm product: '${name}' will be added to the ${dept} dept with an initial stock of ${stock} and price of ${price}.`;
@@ -95,46 +95,15 @@ const MANAGER = {
         }
  
     },
-    askName: async function(res){
-        let namePrompt = new QUESTIONS.Prompt("input", "What is the product's name?", "name");
-        let allNames = res.map(x => x.name);
-        let name;
-
-        do {
-            let response = await QUESTIONS.ask({...namePrompt});
-            let regex = /([^\w\s:,'])/gi;
-            let regexTest = regex.test(response.name);
-            let isSame = allNames.indexOf(response.name) > -1;
-
-            if ( !regexTest && !isSame ){
-                name = response;
-            } else if ( isSame ){
-                console.log(`The product '${response.name}' already exists. Please enter a different product.` .red);
-            } else if ( regexTest ){
-                console.log('Please only use letters, numbers, and spaces.' .red);
-            }
-
-        } while ( name === undefined );
-
-        return name.name;
-    },
-    askDept: async function(res){
-        let allDepts = res.map(x => x.department);
+    askDept: async function(){
+        let res = await DB.selectAllDepts();
+        let allDepts = res.map(x => x.dept_name);
         let deptPrompt = new QUESTIONS.Prompt("list", "What department is this product in?", "dept");
             deptPrompt.choices = [...new Set(allDepts)];
 
         let ans = await QUESTIONS.ask({...deptPrompt});
 
         return ans.dept;
-    },
-    askPrice: async function(){
-        let message = "What is the product's price?";
-        let bool = (ans) => ans > 0;
-        let err = 'Please enter a positive number greater than 0.';
-
-        let price = await QUESTIONS.askNumberUntilCondition(message, bool, err);
-
-        return price;
     }
 }
 

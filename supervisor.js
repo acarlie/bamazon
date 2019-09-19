@@ -1,8 +1,8 @@
 const COLORS = require("colors");
-const UTIL = require("./utilities");
-const DB = UTIL.database;
-const QUESTIONS = UTIL.questions;
-const UTILITIES = UTIL.util;
+const UTILITIES = require("./utilities");
+const DB = UTILITIES.database;
+const QUESTIONS = UTILITIES.questions;
+const UTIL = UTILITIES.util;
 
 const SUPER = {
     selectAction: async function(){
@@ -25,8 +25,11 @@ const SUPER = {
         console.log('View product sales by department');
     },
     createDepartment: async function(){
-        console.log('Create Department');
-
+        let depts = await DB.selectAllDepts();
+        let name = await QUESTIONS.askName(depts, "What is the department's name?", /([^a-z\s&])/gi, 'Please only use letters, spaces, and ampersands.', "dept_name");
+        let overhead = await QUESTIONS.askPrice("What is the departments overhead?");
+        
+        console.log(name, overhead);
     }
 }
 
