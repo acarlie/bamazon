@@ -22,51 +22,38 @@ const SUPER = {
         }
     },
     viewProductSales: async function(){
-        console.log('View product sales by department');
+        let sql = "SELECT d.dept_id, d.dept_name, d.dept_overhead, SUM(p.product_sales) as sales";
+            sql += " FROM departments as d";
+            sql += " LEFT JOIN products as p";
+            sql += " ON d.dept_name = p.department";
+            sql += " GROUP BY d.dept_name";
+            sql += " ORDER BY d.dept_id";
+
+        let res = await DB.connect(sql, []);
+        let withNet = res.map(obj => ({...obj, net: obj.sales - obj.dept_overhead}));
+        console.log(UTIL.tableFromJSON(["ID", "NAME", "OVERHEAD", "SALES", "PROFIT"], withNet));
     },
     createDepartment: async function(){
         let depts = await DB.selectAllDepts();
         let name = await QUESTIONS.askName(depts, "What is the department's name?", /([^a-z\s&])/gi, 'Please only use letters, spaces, and ampersands.', "dept_name");
         let overhead = await QUESTIONS.askPrice("What is the departments overhead?");
-        
-        console.log(name, overhead);
+
+        // confirm
+        let confirmMessage = `Please confirm department: the '${name}' department will be created with an overhead of ${overhead}`;
+        let confirm = await QUESTIONS.askConfirm(confirmMessage);
+
+        //if confirm update products table
+        if (confirm){
+            let sql = 'INSERT INTO departments (dept_name, dept_overhead)';
+                sql += ' VALUES (?, ?);';
+            let args = [name, overhead];
+            let update = await DB.connect(sql, args);
+            console.log(`\n Department Created! '${name}' was added with an overhead of ${overhead} \n` .bgGreen.black);
+        } else {
+            console.log(`Department creation cancelled` .red);
+        }
+
     }
 }
 
 SUPER.selectAction();
-// 1. Create a new MySQL table called `departments`. Your table should include the following columns:
-
-//    * department_id
-
-//    * department_name
-
-//    * over_head_costs (A dummy number you set for each department)
-
-// 2. Modify the products table so that there's a product_sales column, and modify your `bamazonCustomer.js` app so that when a customer purchases anything from the store, the price of the product multiplied by the quantity purchased is added to the product's product_sales column.
-
-//    * Make sure your app still updates the inventory listed in the `products` column.
-
-// 3. Create another Node app called `bamazonSupervisor.js`. Running this application will list a set of menu options:
-
-//    * View Product Sales by Department
-   
-//    * Create New Department
-
-// 4. When a supervisor selects `View Product Sales by Department`, the app should display a summarized table in their terminal/bash window. Use the table below as a guide.
-
-// | department_id | department_name | over_head_costs | product_sales | total_profit |
-// | ------------- | --------------- | --------------- | ------------- | ------------ |
-// | 01            | Electronics     | 10000           | 20000         | 10000        |
-// | 02            | Clothing        | 60000           | 100000        | 40000        |
-
-// 5. The `total_profit` column should be calculated on the fly using the difference between `over_head_costs` and `product_sales`. `total_profit` should not be stored in any database. You should use a custom alias.
-
-// 6. If you can't get the table to display properly after a few hours, then feel free to go back and just add `total_profit` to the `departments` table.
-
-//    * Hint: You may need to look into aliases in MySQL.
-
-//    * Hint: You may need to look into GROUP BYs.
-
-//    * Hint: You may need to look into JOINS.
-
-//    * **HINT**: There may be an NPM package that can log the table to the console. What's is it? Good question :)
