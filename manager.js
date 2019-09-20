@@ -33,14 +33,14 @@ const MANAGER = {
         let res = await DB.selectAll();
 
         //display products
-        UTIL.displayTable(res);
+        UTIL.displayTable(UTIL.productsHeader, res);
     },
     viewLowInv: async function(){
         let sql = "SELECT * FROM products WHERE stock < 15";
         let res = await DB.connect(sql, []);
 
         //display products
-        UTIL.displayTable(res);
+        UTIL.displayTable(UTIL.productsHeader, res);
     },
     addInv: async function(){
         //connect to db
@@ -48,7 +48,7 @@ const MANAGER = {
 
         //ask for product id
         let id = await QUESTIONS.askID(res, "What is the ID of the product you would like to update?");
-        let obj = UTIL.getObjByID(res, id);
+        let obj = UTIL.filterByID(res, id);
 
         //ask for quantity to add
         let message = `How many units of '${obj.name}' would you like to add to stock?`;

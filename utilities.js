@@ -19,7 +19,7 @@ const QUESTIONS = {
         let res = await this.ask({...confirmPrompt});
         return res.confirm;
     },
-    askNumberUntilCondition: async function(message, condition, err){
+    askNumUntil: async function(message, condition, err){
         let numPrompt = new this.Prompt("number", message, "num");
         let number;
 
@@ -40,39 +40,25 @@ const QUESTIONS = {
     askInt: async function(message){
         let bool = (ans) => ans >= 0 && Number.isInteger(ans);
         let err = 'Please enter an integer 0 or greater.';
-
-        let quant = await this.askNumberUntilCondition(message, bool, err);
-
+        let quant = await this.askNumUntil(message, bool, err);
         return quant;
     },
     askPrice: async function(message){
         let bool = (ans) => ans > 0;
         let err = 'Please enter a positive number greater than 0.';
-
-        let price = await this.askNumberUntilCondition(message, bool, err);
-
+        let price = await this.askNumUntil(message, bool, err);
         return price.toFixed(2);
+    },
+    askID: async function(res, message){
+        let condition = UTIL.validateID(res);
+        let id = await QUESTIONS.askNumUntil(message, condition, "Your ID was not valid, please try again.");
+        return id;
     },
     askList: async function(arr){
         let actionPrompt = new this.Prompt("list", "What would you like to do?", "action");
         actionPrompt.choices = [...arr];
         let res = await this.ask({...actionPrompt});
         return res.action;
-    },
-    askID: async function(res, message){
-        let id;
-        let productPrompt = new this.Prompt("number", message, "id");
-
-        do {
-            let idAnswer = await this.ask({...productPrompt});
-            if (UTIL.validateID(res, idAnswer.id)){
-                id = idAnswer.id;
-            } else {
-                console.log("Your ID was not valid, please try again." .red);
-            }
-        } while ( id === undefined );
-
-        return id;
     },
     askName: async function(res, message, regex, regexErr, prop){
         let namePrompt = new QUESTIONS.Prompt("input", message, "name");
@@ -122,6 +108,11 @@ const DB = {
         let res = await this.connect(sql, []);
         return res;
     },
+    getByID: async function(id){
+        let objSql = "SELECT * FROM products WHERE ?"
+        let objGet = await this.connect(objSql, [{id: id}]);
+        return objGet[0];
+    },
     setItems: async function(args){
         let sqlUpdate = "UPDATE products SET ? WHERE ?";
         let update = await this.connect(sqlUpdate, args);
@@ -139,15 +130,17 @@ const DB = {
 
 const UTIL = {
     parse: (res) => JSON.parse(JSON.stringify(res)),
-    displayTable: function(res){
-        let productTable = this.tableFromJSON(this.productsHeader, res);
+    displayTable: function(arr, res){
+        let productTable = this.tableFromJSON(arr, res);
         console.log("\n" + productTable);
     },
-    validateID: function(res, val){
-        let arr = res.map(x => x.id);
-        return arr.indexOf(val) > -1 ? true : false ;
+    validateID: function(res){
+        return function(val){
+            let arr = res.map(x => x.id);
+            return arr.indexOf(val) > -1 ? true : false ;
+        }
     },
-    getObjByID: function(res, val){
+    filterByID: function(res, val){
         let arr = res.filter(x => x.id === val);
         return arr[0];
     },

@@ -7,20 +7,23 @@ const UTIL = UTILITIES.util;
 const CUST = {
     viewAndPurchase: async function(){
         //connect to db
-        let res = await DB.selectAll();
+        let sql = "SELECT id, name, department, price FROM products";
+        let res = await DB.connect(sql, []);
 
         //display products
-        UTIL.displayTable(res);
+        UTIL.displayTable(["ID", "NAME", "DEPT", "PRICE"], res);
 
         //ask for product id
         let id = await QUESTIONS.askID(res, "Enter the ID of the product to purchase:");
 
+        //get full obj
+        let obj = await DB.getByID(id);
+
         //ask for quantity
-        let obj = UTIL.getObjByID(res, id);
         let quant = await this.askQuant(res, obj.stock);
 
         //confirm order
-        let total = obj.price * quant;
+        let total = parseFloat((obj.price * quant).toFixed(2));
         let confirmMessage = `Please confirm your purchase of ${quant} unit(s) of '${obj.name}' for $${total} ($${obj.price}/ea):`;
         let confirm = await QUESTIONS.askConfirm(confirmMessage);
 

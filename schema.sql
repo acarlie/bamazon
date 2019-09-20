@@ -14,7 +14,6 @@ create table products(
     primary key(id)
 )
 
-
 INSERT INTO products (name, department, price, stock)
 VALUES ("Fizzing Whizzbees", "Grocery", 5.50, 20);
 

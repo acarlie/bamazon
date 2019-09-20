@@ -31,7 +31,7 @@ const SUPER = {
 
         let res = await DB.connect(sql, []);
         let withNet = res.map(obj => ({...obj, net: obj.sales - obj.dept_overhead}));
-        console.log(UTIL.tableFromJSON(["ID", "NAME", "OVERHEAD", "SALES", "PROFIT"], withNet));
+        UTIL.displayTable(["ID", "NAME", "OVERHEAD", "SALES", "PROFIT"], withNet);
     },
     createDepartment: async function(){
         let depts = await DB.selectAllDepts();
