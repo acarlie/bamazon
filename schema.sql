@@ -55,6 +55,9 @@ create table departments(
 )
 
 INSERT INTO departments (dept_name, dept_overhead)
+VALUES ("Home", 900);
+
+INSERT INTO departments (dept_name, dept_overhead)
 VALUES ("Clothing", 5000);
 
 INSERT INTO departments (dept_name, dept_overhead)
@@ -65,6 +68,3 @@ VALUES ("Sports & Outdoors", 1000);
 
 INSERT INTO departments (dept_name, dept_overhead)
 VALUES ("Grocery", 1500);
-
-INSERT INTO departments (dept_name, dept_overhead)
-VALUES ("Home", 900);
