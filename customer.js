@@ -45,7 +45,7 @@ const CUST = {
             if (stock - ans.quant > 0 && ans.quant > 0 && isInt){
                 quant = ans.quant;
             } else if (ans.quant <= 0 || !isInt) {
-                console.log(`Please enter an integer greater than 0`);
+                console.log(`Please enter an integer greater than 0` .red);
             } else {
                 console.log(`Insufficient stock, please enter a quantity less than ${stock}` .red);
             }
