@@ -9,16 +9,16 @@
   
 ---
 ### Customer View
+![Screen capture gif of customer options.](/gifs/customer.gif)
 
 *Command Format*
 ```
 node customer
 ```
 
-*Demo*
-![Screen capture gif of customer options.](/gifs/customer.gif)
 ---
 ### Manager View
+![Screen capture gif of manager options.](/gifs/manager.gif)
 
 *Command Format*
 ```
@@ -31,10 +31,9 @@ node manager
 * Add to Inventory
 * Add New Product
 
-*Demo*
-![Screen capture gif of manager options.](/gifs/manager.gif)
 ---
 ### Supervisor View
+![Screen capture gif of manager options.](/gifs/supervisor.gif)
 
 *Command Format*
 ```
@@ -45,5 +44,3 @@ node supervisor
 * View Product Sales by Department
 * Create Department
 
-*Demo*
-![Screen capture gif of manager options.](/gifs/supervisor.gif)
