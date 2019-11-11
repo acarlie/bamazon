@@ -30,6 +30,7 @@ node customer
 ---
 ### Manager View
 The manager view allows 'managers' to view products for sale, view low inventory, add inventory, and create products. Enter the command 'node manager' and choose which action you would like to take.
+
 ![Screen capture gif of manager options.](/gifs/manager.gif)
 
 *Command Format*
@@ -46,6 +47,7 @@ node manager
 ---
 ### Supervisor View
  The supervisor view allows 'supervisors' to view product sales by department and create departments. To enter the 'supervisor' view use the command 'node supervisor' and select which action you would like to take.
+ 
 ![Screen capture gif of manager options.](/gifs/supervisor.gif)
 
 *Command Format*
